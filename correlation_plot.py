@@ -14,24 +14,31 @@ m = Model("Correlation")
 
 T = []
 #N = [ [638, 635, 653, 842, 861, 1004, 1041, 1014], [1373, 1490, 1715, 1632, 1819, 1850, 1896, 2085] ]
-L = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
+L = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
 alpha = 1000000
-betasq = 455000000000000000000
+betasq = 455000000000000000
 #beta2sq = 30
 fp = open(sys.argv[1], "r")
 fq = open(sys.argv[2], "w")
+fw = open(sys.argv[4], "w")
 #dictionary for state and its number
 statedict = {}
 N = []
 noofstates = 0
 line = fp.readline()
 line = fp.readline()
+nmin = 100000000.0
+nmax = 0.0
 while line:
       col = line.strip().split(",")
       #print(line[14])
       st_name = col[1]
       week_no = col[3]
       population = int(col[14])
+      if population < nmin:
+         nmin = population
+      if population > nmax:
+         nmax = population
       if st_name not in statedict:
          statedict[st_name] = noofstates
          noofstates = noofstates+1
@@ -41,6 +48,12 @@ while line:
          l = statedict[st_name]
          N[l].append(population)
       line = fp.readline()
+
+#normalize values to between 1 to 100
+for i in range(0, len(N)):
+    for t in range(0, len(N[i])):
+        N[i][t] = int(49* (N[i][t] - nmin)/(nmax -nmin)+1)
+        #print(str(N[i][t]))    
 
 #print(statedict)
 fq.write(str(N)+"\n")
@@ -58,8 +71,8 @@ noT = len(N[0])
 for i in range(0, noT):
     T.append(i)
 #roots of the cluster
-rA = 0
-rB = 1
+#rA = 0
+#rB = 1
 
 yA = {}
 yB = {}
@@ -69,10 +82,10 @@ for i in V:
     yB[i] = m.addVar(vtype = GRB.BINARY, name = "yB("+str(i)+")")
 
 #root constraints
-m.addConstr( yA[rA] == 1, name = "RC1")
-m.addConstr( yA[rB] == 0, name = "RC2")
-m.addConstr( yB[rA] == 0, name = "RC3")
-m.addConstr( yB[rB] == 1, name = "RC4")
+#m.addConstr( yA[rA] == 1, name = "RC1")
+#m.addConstr( yA[rB] == 0, name = "RC2")
+#m.addConstr( yB[rA] == 0, name = "RC3")
+#m.addConstr( yB[rB] == 1, name = "RC4")
 
 for i in V:
     m.addConstr(yA[i] + yB[i] <= 1, name = "RC39")
@@ -252,7 +265,7 @@ for i in V:
     v2 = yB[i].X
     if v1 == 1:
        Cluster1.append(i)
-    else:
+    elif v2 == 1:
        Cluster2.append(i)
 
 fq.write("Cluster 1: "+str(Cluster1)+"\n")
@@ -288,7 +301,7 @@ clusvals2 = []
 for t in T:
     clusvals1.append(XA[t].X)
     clusvals2.append(XB[t].X)
-
+    fw.write(str(t)+","+str(XA[t].X)+","+str(XB[t].X)+"\n")
 
 
 fq.write("Clusters time series\n")
@@ -298,3 +311,7 @@ fq.write(str(clusvals2))
 
 elapsed_time = time.time() - start_time
 fq.write("Total time elapsed: "+str(elapsed_time)+"\n")
+
+fq.close()
+fw.close()
+
