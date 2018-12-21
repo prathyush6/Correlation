@@ -14,7 +14,7 @@ m = Model("Correlation")
 
 T = []
 #N = [ [638, 635, 653, 842, 861, 1004, 1041, 1014], [1373, 1490, 1715, 1632, 1819, 1850, 1896, 2085] ]
-L = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+L = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
 alpha = 1000000
 betasq = 455000000000000000
 #beta2sq = 30
@@ -52,13 +52,13 @@ while line:
 #normalize values to between 1 to 100
 for i in range(0, len(N)):
     for t in range(0, len(N[i])):
-        N[i][t] = int(49* (N[i][t] - nmin)/(nmax -nmin)+1)
+        N[i][t] = 99* (N[i][t] - nmin)/(nmax -nmin)+ 1
         #print(str(N[i][t]))    
 
 #print(statedict)
-fq.write(str(N)+"\n")
-fq.write(str(len(N))+"\n")
-fq.write(str(len(N[0]))+"\n")
+#fq.write(str(N)+"\n")
+fq.write("|V| = "+str(len(N))+"\n")
+fq.write("|T| = "+str(len(N[0]))+"\n")
 fp.close()
 
 V = []
@@ -226,6 +226,7 @@ for l in L:
 
 m.addConstr( quicksum(Z5[l, ll]*pow(2, l+ll) for l in L for ll in L) <= betasq, name = "RC38")           
 
+m.addConstr( quicksum(yA[i] + yB[i] for i in V) <= 6, name = "RC40")
 #objective
 m.setObjective( quicksum(1.0 * Z1[l, ll, t] for l in L for ll in L for t in T) + quicksum(1.0 * Z2[l, ll] for l in L for ll in L) + quicksum(1.0 * Z3A[l, ll, t] for l in L for ll in L for t in T) + quicksum(1.0 * Z4A[l, ll] for l in L for ll in L) + quicksum(1.0 * Z3B[l, ll, t] for l in L for ll in L for t in T) + quicksum(1.0 * Z4B[l, ll] for l in L for ll in L) + quicksum(1.0 * Z5A[l] for l in L) + quicksum(Z5B[l] for l in L) + quicksum(1.0 * Z5[l, ll] for l in L for ll in L), GRB.MAXIMIZE) 
 
