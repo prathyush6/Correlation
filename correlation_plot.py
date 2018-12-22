@@ -14,7 +14,7 @@ m = Model("Correlation")
 
 T = []
 #N = [ [638, 635, 653, 842, 861, 1004, 1041, 1014], [1373, 1490, 1715, 1632, 1819, 1850, 1896, 2085] ]
-L = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28]
+L = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
 alpha = 1000000
 betasq = 455000000000000000
 #beta2sq = 30
@@ -34,7 +34,7 @@ while line:
       #print(line[14])
       st_name = col[1]
       week_no = col[3]
-      population = int(col[14])
+      population = float(col[14])
       if population < nmin:
          nmin = population
       if population > nmax:
@@ -52,7 +52,7 @@ while line:
 #normalize values to between 1 to 100
 for i in range(0, len(N)):
     for t in range(0, len(N[i])):
-        N[i][t] = 99* (N[i][t] - nmin)/(nmax -nmin)+ 1
+        N[i][t] = float(9.0 * (N[i][t] - nmin)/(nmax -nmin)+ 1)
         #print(str(N[i][t]))    
 
 #print(statedict)
@@ -60,6 +60,7 @@ for i in range(0, len(N)):
 fq.write("|V| = "+str(len(N))+"\n")
 fq.write("|T| = "+str(len(N[0]))+"\n")
 fp.close()
+
 
 V = []
 noV = len(N)
@@ -86,9 +87,8 @@ for i in V:
 #m.addConstr( yA[rB] == 0, name = "RC2")
 #m.addConstr( yB[rA] == 0, name = "RC3")
 #m.addConstr( yB[rB] == 1, name = "RC4")
-
 for i in V:
-    m.addConstr(yA[i] + yB[i] <= 1, name = "RC39")
+    m.addConstr(yA[i] + yB[i] <= 1, name = "RC39["+str(i)+"]")
 
 #yA = {}
 #yB = {}
@@ -105,8 +105,10 @@ for t in T:
     XB[t] = m.addVar(lb = 0.0, name = "XB["+str(t)+"]")
 
 for t in T:
-    m.addConstr( XA[t] == quicksum(yA[i] * N[i][t] for i in V), name = "RC5["+str(t)+"]")
-    m.addConstr( XB[t] == quicksum(yB[i] * N[i][t] for i in V), name = "RC6["+str(t)+"]")
+    m.addConstr( XA[t] >= quicksum(yA[i] * N[i][t] for i in V), name = "RC5["+str(t)+"]")
+    m.addConstr( XA[t] - 1<= quicksum(yA[i] * N[i][t] for i in V), name = "RC51["+str(t)+"]")
+    m.addConstr( XB[t] >= quicksum(yB[i] * N[i][t] for i in V), name = "RC6["+str(t)+"]")
+    m.addConstr( XB[t] - 1<= quicksum(yB[i] * N[i][t] for i in V), name = "RC61["+str(t)+"]")
 
 Z1A = {}
 Z1B = {}
